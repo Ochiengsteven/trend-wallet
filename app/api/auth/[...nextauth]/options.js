@@ -1,41 +1,39 @@
 import User from "@/app/(models)/user";
 import CredentialsProvider from "next-auth/providers/credentials";
-// import GitHubProvider from "next-auth/providers/github";
-import GoogleProvider from "next-auth/providers/google";
+import TwitterProvider from "next-auth/providers/twitter";
+import FacebookProvider from "next-auth/providers/facebook";
+// import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcrypt";
 
 export const options = {
   providers: [
-    // GitHubProvider({
-    //   profile(profile) {
-    //     let userRole = "Github User";
-    //     if (profile?.email === "stevenochieng6305@gmail.com") {
-    //       userRole = "admin";
-    //     }
-
-    //     return {
-    //       ...profile,
-    //       role: userRole,
-    //     };
-    //   },
-    //   clientId: process.env.GITHUB_ID,
-    //   clientSecret: process.env.GITHUB_SECRET,
-    // }),
-    GoogleProvider({
+    TwitterProvider({
+      clientId: process.env.TWITTER_CLIENT_ID,
+      clientSecret: process.env.TWITTER_CLIENT_SECRET,
+      // Optional: Add a profile callback to customize user data
       profile(profile) {
-        let userRole = "user";
-        if (profile?.email === "stevenochieng6305@gmail.com") {
-          userRole = "admin";
-        }
-
+        console.log(profile);
         return {
-          ...profile,
-          id: profile.sub,
-          role: userRole,
+          id: profile.id_str,
+          name: profile.name,
+          username: profile.screen_name,
+          image: profile.profile_image_url_https,
         };
       },
-      clientId: process.env.GOOGLE_ID,
-      clientSecret: process.env.GOOGLE_SECRET,
+    }),
+    FacebookProvider({
+      clientId: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+
+      profile(profile) {
+        console.log(profile);
+        return {
+          id: profile.id,
+          name: profile.name,
+          username: profile.screen_name,
+          image: profile.profile_image_url_https,
+        };
+      },
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -62,8 +60,8 @@ export const options = {
             if (match) {
               delete foundUser.password;
 
-              foundUser.role = "Unverified Email";
-              return foundUser;
+              // Use the role from the foundUser
+              return { ...foundUser, role: foundUser.role };
             }
           }
         } catch (error) {
